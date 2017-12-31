@@ -2,8 +2,8 @@
 
 Gatling load and performance test suites. It offers these following suites:
 
-- BasicSuite
-- FeedersSuite - Using Feeders & checks
+- BasicSimulation
+- FeederSimulation - Using Feeders & checks
 
 Run the project with maven plugin: 
 `mvn clean gatling:test`
