@@ -11,4 +11,4 @@ Run the project with maven plugin:
 
 For more information, please visit: https://gatling.io/
 
-Happy hacking! :simple_smile:
+Happy hacking! :smiley:
