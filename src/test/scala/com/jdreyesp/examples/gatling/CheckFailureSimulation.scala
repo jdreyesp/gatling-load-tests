@@ -20,28 +20,20 @@ import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class FeederSimulation extends Simulation {
-
-  val feeder = csv("search.csv").random
+class CheckFailureSimulation extends Simulation {
 
   object Search {
 
-    val search = exec(http("Home")
-      .get("/"))
-      .pause(1)
-      .feed(feeder) // 3
-      .exec(http("Search")
-      .get("/computers?f=${searchCriterion}") // 4
-      .check(css("a:contains('${searchComputerName}')", "href").saveAs("computerURL"))) // 5
-      .pause(1)
-      .exec(http("Select")
-        .get("${computerURL}")) // 6
-      .pause(1)
+    val search = repeat(5, "n") {
+      exec(http("Page ${n}")
+        .get("/computers?p=${n}"))
+        .pause(1)
+    }
+
   }
 
   val userScenario = scenario("Normal user scenario")
-  .exec(Search.search)    // A scenario is a chain of requests and pauses
-
+  .exec(Search.search)
 
   setUp(userScenario.inject(rampUsers(10) over (10 seconds)))
     .protocols(BasicSimulation.httpConf)

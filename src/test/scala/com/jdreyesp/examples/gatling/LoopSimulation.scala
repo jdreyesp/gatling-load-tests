@@ -15,34 +15,38 @@
  */
 package com.jdreyesp.examples.gatling
 
+import java.util.concurrent.ThreadLocalRandom
+
 import io.gatling.core.Predef._
 import io.gatling.http.Predef._
 
 import scala.concurrent.duration._
 
-class FeederSimulation extends Simulation {
+class LoopSimulation extends Simulation {
 
-  val feeder = csv("search.csv").random
+  object Create {
 
-  object Search {
-
-    val search = exec(http("Home")
-      .get("/"))
+    //Create some computers
+    //This will generate random 200 / 201. The check will fail randomly with 201 responses
+    val create = exec(http("Form")
+      .get("/computers/new"))
       .pause(1)
-      .feed(feeder) // 3
-      .exec(http("Search")
-      .get("/computers?f=${searchCriterion}") // 4
-      .check(css("a:contains('${searchComputerName}')", "href").saveAs("computerURL"))) // 5
-      .pause(1)
-      .exec(http("Select")
-        .get("${computerURL}")) // 6
-      .pause(1)
+      .exec(http("Post")
+        .post("/computers")
+        .check(status.is(session => 200 + ThreadLocalRandom.current.nextInt(2))))
   }
 
-  val userScenario = scenario("Normal user scenario")
-  .exec(Search.search)    // A scenario is a chain of requests and pauses
+  //We define a tryMaxExecution, capturing the error in 201 cases
+  val tryMaxExecution = tryMax(2) {
+    exec(Create.create)
+  }.exitHereIfFailed
 
+  //We now create the admin scenario
+  val adminScenario = scenario("Admin user scenario")
+  .exec(tryMaxExecution)
 
-  setUp(userScenario.inject(rampUsers(10) over (10 seconds)))
+  //Set up the scenario
+  setUp(adminScenario.inject(rampUsers(10) over (10 seconds)))
     .protocols(BasicSimulation.httpConf)
+
 }
